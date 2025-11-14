@@ -6,7 +6,7 @@ export interface PlannerSnapshot {
   activeWeek: PlannerWeek
   tasks: PlannerTask[]
   floatingTasks: PlannerTask[]
-  source: 'mock' | 'local-storage'
+  source: 'mock' | 'local-storage' | 'backend-api'
 }
 
 export interface PlannerSnapshotEnvelope {
