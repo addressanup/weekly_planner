@@ -12,17 +12,10 @@ export const taskCreationSchema = z.object({
     .min(1, 'Task title is required')
     .max(200, 'Task title must be less than 200 characters')
     .trim(),
-  category: z.enum(['work', 'health', 'personal', 'learning', 'admin'] as const, {
-    errorMap: () => ({ message: 'Please select a valid category' }),
-  }),
-  energy: z.enum(['high', 'medium', 'low'] as const, {
-    errorMap: () => ({ message: 'Please select an energy level' }),
-  }),
+  category: z.enum(['work', 'health', 'personal', 'learning', 'admin']),
+  energy: z.enum(['high', 'medium', 'low']),
   durationMinutes: z
-    .number({
-      required_error: 'Duration is required',
-      invalid_type_error: 'Duration must be a number',
-    })
+    .number()
     .int('Duration must be a whole number')
     .min(5, 'Duration must be at least 5 minutes')
     .max(480, 'Duration cannot exceed 8 hours'),
@@ -186,9 +179,10 @@ export const validateQuickAdd = (input: string) => {
   const result = quickAddSchema.safeParse({ input });
 
   if (!result.success) {
+    const firstIssue = result.error.issues[0];
     return {
       success: false as const,
-      error: result.error?.errors?.[0]?.message || 'Invalid input',
+      error: firstIssue?.message || 'Invalid input',
     };
   }
 
