@@ -3,7 +3,7 @@
 A modern, full-stack weekly planning application built with React, TypeScript, NestJS, and Prisma. Plan your week with drag-and-drop tasks, swimlanes for different work types, and comprehensive task management.
 
 ![Weekly Planner](https://img.shields.io/badge/version-1.0.0-blue.svg)
-![Frontend Tests](https://img.shields.io/badge/frontend%20tests-108%20passing-brightgreen.svg)
+![Frontend Tests](https://img.shields.io/badge/frontend%20tests-121%20passing-brightgreen.svg)
 ![Backend Tests](https://img.shields.io/badge/backend%20tests-52%20passing-brightgreen.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 
@@ -28,7 +28,9 @@ A modern, full-stack weekly planning application built with React, TypeScript, N
 
 ### Developer Features
 - **TypeScript** - Full type safety across frontend and backend
-- **Comprehensive Tests** - 160 total tests (108 frontend + 52 backend)
+- **Comprehensive Tests** - 173 total tests (121 frontend + 52 backend)
+- **API Integration** - Complete frontend-backend API integration with axios
+- **Authentication** - JWT-based auth with secure token management
 - **API Documentation** - Complete REST API documentation
 - **CI/CD** - Automated testing and deployment
 - **Error Handling** - Production-grade error boundaries and logging
@@ -454,10 +456,16 @@ NODE_ENV="development"
 - [x] Comprehensive tests
 - [x] API documentation
 
-### Phase 3: Integration (In Progress)
-- [ ] Connect frontend to backend API
-- [ ] User authentication flow
-- [ ] Real-time sync
+### Phase 3: Integration (Partially Complete)
+- [x] API client infrastructure with axios
+- [x] Authentication API service layer
+- [x] Tasks & Weeks API service layer
+- [x] User authentication UI (Login/Register)
+- [x] JWT token management
+- [x] Auth state management with Zustand
+- [x] API service unit tests (13 tests)
+- [ ] Integrate planner store with backend API
+- [ ] Real-time data sync
 - [ ] Backend deployment
 
 ### Phase 4: Advanced Features (Planned)
