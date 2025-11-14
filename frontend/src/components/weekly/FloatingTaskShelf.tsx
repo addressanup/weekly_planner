@@ -4,11 +4,11 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 
-import { usePlannerStore } from "../../state/usePlannerStore";
+import { usePlanner } from "../../hooks/usePlanner";
 import { TaskCard } from "./TaskCard";
 
 export const FloatingTaskShelf = () => {
-  const tasks = usePlannerStore((state) =>
+  const tasks = usePlanner((state) =>
     state.floatingTasks.slice().sort((a, b) => a.order - b.order)
   );
 

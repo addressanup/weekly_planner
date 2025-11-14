@@ -10,7 +10,7 @@ import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import { memo, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 
-import { usePlannerStore } from "../../state/usePlannerStore";
+import { usePlanner } from "../../hooks/usePlanner";
 import type { PlannerSwimlaneKey } from "../../types/planner";
 import { DayColumn } from "./DayColumn";
 import { FloatingTaskShelf } from "./FloatingTaskShelf";
@@ -20,17 +20,17 @@ import { TaskCardPreview } from "./TaskCardPreview";
 import { WeekHeader } from "./WeekHeader";
 
 export const WeeklyCanvas = memo(() => {
-  const week = usePlannerStore((state) => state.activeWeek);
-  const tasks = usePlannerStore((state) => state.tasks);
-  const floatingTasks = usePlannerStore((state) => state.floatingTasks);
-  const moveTask = usePlannerStore((state) => state.moveTask);
-  const reorderFloatingTask = usePlannerStore(
+  const week = usePlanner((state) => state.activeWeek);
+  const tasks = usePlanner((state) => state.tasks);
+  const floatingTasks = usePlanner((state) => state.floatingTasks);
+  const moveTask = usePlanner((state) => state.moveTask);
+  const reorderFloatingTask = usePlanner(
     (state) => state.reorderFloatingTask
   );
-  const scheduleFloatingTask = usePlannerStore(
+  const scheduleFloatingTask = usePlanner(
     (state) => state.scheduleFloatingTask
   );
-  const unscheduleTask = usePlannerStore((state) => state.unscheduleTask);
+  const unscheduleTask = usePlanner((state) => state.unscheduleTask);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {

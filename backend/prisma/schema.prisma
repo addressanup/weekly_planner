@@ -1,0 +1,354 @@
+// Prisma schema for Weekly Planner
+// Database: PostgreSQL
+// ORM: Prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// USER MANAGEMENT & AUTHENTICATION
+// ============================================================================
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  emailVerified DateTime?
+  password      String? // Null for OAuth-only users
+  name          String?
+  avatar        String?
+
+  // OAuth providers
+  googleId String? @unique
+
+  // Metadata
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  lastLogin DateTime?
+
+  // User preferences
+  preferences Json? // Store user settings as JSON
+
+  // Relations
+  weeks         Week[]
+  tasks         Task[]
+  sessions      Session[]
+  focusSessions FocusSession[]
+
+  @@index([email])
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@map("sessions")
+}
+
+// ============================================================================
+// PLANNER CORE ENTITIES
+// ============================================================================
+
+enum PlannerCategory {
+  WORK
+  HEALTH
+  PERSONAL
+  LEARNING
+  ADMIN
+}
+
+enum PlannerEnergy {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum PlannerStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  SKIPPED
+}
+
+enum SwimlaneType {
+  FOCUS
+  COLLABORATION
+  SELF_CARE
+  LIFE_ADMIN
+}
+
+model Week {
+  id         String   @id @default(uuid())
+  userId     String
+  weekNumber Int // YYYYWW format (e.g., 202546)
+  startDate  DateTime
+  endDate    DateTime
+
+  // Week metadata
+  theme       String?
+  reflection  String? // Week-end reflection notes
+  isArchived  Boolean  @default(false)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  days Day[]
+  tasks Task[] // Tasks scheduled for this week
+
+  @@unique([userId, weekNumber])
+  @@index([userId])
+  @@index([weekNumber])
+  @@map("weeks")
+}
+
+model Day {
+  id          String   @id @default(uuid())
+  weekId      String
+  date        DateTime @unique
+  dayOfWeek   Int // 0-6 (Sunday-Saturday)
+
+  // Day metadata
+  theme       String?
+  focusMetric String?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  week  Week   @relation(fields: [weekId], references: [id], onDelete: Cascade)
+  tasks Task[]
+
+  @@index([weekId])
+  @@index([date])
+  @@map("days")
+}
+
+model Task {
+  id             String           @id @default(uuid())
+  userId         String
+  weekId         String? // Null for floating tasks
+  dayId          String? // Null for unscheduled tasks
+
+  // Core task data
+  title          String
+  notes          String?
+  category       PlannerCategory
+  energy         PlannerEnergy
+  status         PlannerStatus   @default(PLANNED)
+  durationMinutes Int
+
+  // Scheduling
+  swimlane       SwimlaneType?
+  order          Int             @default(0) // Order within day/swimlane
+
+  // Recurring tasks
+  targetOccurrencesPerWeek Int?
+  isRecurring    Boolean         @default(false)
+
+  // Integration metadata
+  sourceType     String? // "manual", "email", "calendar", "ai"
+  externalId     String? // ID from external system (e.g., Google Calendar event ID)
+
+  // Timestamps
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  completedAt    DateTime?
+
+  // Relations
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  week          Week?          @relation(fields: [weekId], references: [id], onDelete: SetNull)
+  day           Day?           @relation(fields: [dayId], references: [id], onDelete: SetNull)
+  focusSessions FocusSession[]
+  auditLogs     TaskAuditLog[]
+
+  @@index([userId])
+  @@index([weekId])
+  @@index([dayId])
+  @@index([status])
+  @@index([category])
+  @@map("tasks")
+}
+
+// ============================================================================
+// POMODORO & FOCUS TRACKING
+// ============================================================================
+
+model FocusSession {
+  id              String   @id @default(uuid())
+  userId          String
+  taskId          String?
+
+  // Session data
+  durationMinutes Int
+  sessionType     String // "focus" | "break" | "long_break"
+  completed       Boolean  @default(false)
+
+  // Timestamps
+  startedAt  DateTime
+  endedAt    DateTime?
+  createdAt  DateTime  @default(now())
+
+  // Relations
+  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task Task? @relation(fields: [taskId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([taskId])
+  @@index([startedAt])
+  @@map("focus_sessions")
+}
+
+// ============================================================================
+// GAMIFICATION
+// ============================================================================
+
+model Streak {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String // "weekly_plan", "daily_completion", "focus_session"
+
+  current   Int      @default(0)
+  longest   Int      @default(0)
+  lastDate  DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, type])
+  @@index([userId])
+  @@map("streaks")
+}
+
+model Badge {
+  id          String   @id @default(uuid())
+  userId      String
+  badgeType   String // "planner_pioneer", "focus_master", etc.
+  tier        String // "bronze", "silver", "gold", "platinum"
+
+  earnedAt    DateTime @default(now())
+  description String?
+
+  @@index([userId])
+  @@map("badges")
+}
+
+model ProductivityScore {
+  id        String   @id @default(uuid())
+  userId    String
+  weekId    String
+
+  // Score components
+  completionScore Int // Based on tasks completed
+  focusScore      Int // Based on focus sessions
+  balanceScore    Int // Based on category distribution
+  totalScore      Int // Overall score
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, weekId])
+  @@index([userId])
+  @@index([weekId])
+  @@map("productivity_scores")
+}
+
+// ============================================================================
+// AUDIT & AI LEARNING
+// ============================================================================
+
+model TaskAuditLog {
+  id          String   @id @default(uuid())
+  taskId      String
+  userId      String
+
+  action      String // "created", "moved", "scheduled", "completed", "updated"
+  changes     Json // Store before/after state
+  context     Json? // Additional context (e.g., AI suggestion accepted/rejected)
+
+  timestamp   DateTime @default(now())
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@index([userId])
+  @@index([timestamp])
+  @@map("task_audit_logs")
+}
+
+model AIOverride {
+  id              String   @id @default(uuid())
+  userId          String
+
+  suggestionType  String // "schedule", "duration", "energy", etc.
+  suggestedValue  Json
+  actualValue     Json
+  reason          String? // User-provided reason for override
+
+  timestamp       DateTime @default(now())
+
+  @@index([userId])
+  @@index([timestamp])
+  @@map("ai_overrides")
+}
+
+// ============================================================================
+// CALENDAR INTEGRATION
+// ============================================================================
+
+model CalendarConnection {
+  id           String   @id @default(uuid())
+  userId       String
+
+  provider     String // "google", "outlook", etc.
+  accessToken  String
+  refreshToken String?
+  expiresAt    DateTime?
+
+  // Sync settings
+  syncEnabled  Boolean  @default(true)
+  lastSyncAt   DateTime?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId])
+  @@map("calendar_connections")
+}
+
+model CalendarEvent {
+  id          String   @id @default(uuid())
+  userId      String
+
+  externalId  String // Event ID from external calendar
+  provider    String // "google", "outlook"
+  title       String
+  description String?
+  startTime   DateTime
+  endTime     DateTime
+
+  taskId      String? // Linked task if applicable
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, provider, externalId])
+  @@index([userId])
+  @@index([startTime])
+  @@map("calendar_events")
+}

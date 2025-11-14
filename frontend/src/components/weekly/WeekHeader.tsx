@@ -2,7 +2,7 @@ import { format } from 'date-fns'
 import { CalendarDays, ChevronLeft, ChevronRight, RefreshCcw } from 'lucide-react'
 import { memo } from 'react'
 
-import { usePlannerStore } from '../../state/usePlannerStore'
+import { usePlanner } from '../../hooks/usePlanner'
 
 const formatRange = (startISO: string, endISO: string) => {
   const start = new Date(startISO)
@@ -15,10 +15,10 @@ const formatRange = (startISO: string, endISO: string) => {
 }
 
 export const WeekHeader = memo(() => {
-  const activeWeek = usePlannerStore((state) => state.activeWeek)
-  const goToPreviousWeek = usePlannerStore((state) => state.goToPreviousWeek)
-  const goToNextWeek = usePlannerStore((state) => state.goToNextWeek)
-  const resetToCurrentWeek = usePlannerStore((state) => state.resetToCurrentWeek)
+  const activeWeek = usePlanner((state) => state.activeWeek)
+  const goToPreviousWeek = usePlanner((state) => state.goToPreviousWeek)
+  const goToNextWeek = usePlanner((state) => state.goToNextWeek)
+  const resetToCurrentWeek = usePlanner((state) => state.resetToCurrentWeek)
 
   return (
     <header className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-white px-6 py-4 shadow-sm">

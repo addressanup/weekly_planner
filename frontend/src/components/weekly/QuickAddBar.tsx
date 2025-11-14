@@ -2,7 +2,7 @@ import { useId, useState } from "react";
 import type { FormEvent } from "react";
 import { Sparkles, Timer } from "lucide-react";
 
-import { usePlannerStore } from "../../state/usePlannerStore";
+import { usePlanner } from "../../hooks/usePlanner";
 import type { PlannerCategory, PlannerEnergy } from "../../types/planner";
 
 interface ParsedQuickAdd {
@@ -166,11 +166,11 @@ export const QuickAddBar = () => {
   const [hintIndex, setHintIndex] = useState(0);
   const [lastCreatedTitle, setLastCreatedTitle] = useState<string | null>(null);
 
-  const createFloatingTask = usePlannerStore(
+  const createFloatingTask = usePlanner(
     (state) => state.createFloatingTask
   );
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const parsed = parseQuickAdd(value);
     if (!parsed) {
@@ -178,9 +178,10 @@ export const QuickAddBar = () => {
       return;
     }
 
-    const task = createFloatingTask({
+    // createFloatingTask may return Promise<PlannerTask> or PlannerTask
+    const task = await Promise.resolve(createFloatingTask({
       ...parsed,
-    });
+    }));
 
     setLastCreatedTitle(task.title);
     setValue("");
