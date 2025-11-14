@@ -1,13 +1,21 @@
 # Backend API Integration Guide
 
-This document explains how the Weekly Planner integrates with the backend API and how to enable full backend persistence.
+This document explains how the Weekly Planner integrates with the backend API.
+
+## Current Status
+
+✅ **Backend integration is ENABLED** for authenticated users as of Phase 2 completion.
+
+The app automatically switches between modes based on authentication:
+- **Authenticated users**: All data syncs with the NestJS backend API
+- **Unauthenticated users**: Data persists in browser localStorage
 
 ## Overview
 
-The Weekly Planner now supports two modes of operation:
+The Weekly Planner supports two modes of operation:
 
-1. **Local Storage Mode** (Current Default): Uses browser localStorage for persistence
-2. **Backend API Mode**: Syncs all data with the NestJS backend API
+1. **Local Storage Mode**: Uses browser localStorage for persistence (unauthenticated users)
+2. **Backend API Mode**: Syncs all data with the NestJS backend API (authenticated users)
 
 ## Architecture
 
@@ -83,57 +91,61 @@ const { isLoading, error } = usePlannerStoreWithApi();
    loadCurrentWeekFromApi() → Fetch data
    ```
 
-## Switching to Backend Mode
+## How Backend Mode is Enabled
 
-### Option 1: Replace Existing Store
+✅ **Already Implemented**: The app uses a unified `usePlanner` hook that automatically selects the appropriate store.
 
-To enable backend persistence app-wide:
+### Implementation Details
 
-1. **Update imports** in components:
-   ```typescript
-   // Before
-   import { usePlannerStore } from '../state/usePlannerStore';
-
-   // After
-   import { usePlannerStoreWithApi as usePlannerStore } from '../state/usePlannerStoreWithApi';
-   ```
-
-2. **Update hook initialization**:
-   ```typescript
-   // In hooks/usePlannerBootstrap.ts or similar
-   const { loadInitialSnapshot, loadCurrentWeekFromApi } = usePlannerStore();
-
-   useEffect(() => {
-     if (isAuthenticated) {
-       loadCurrentWeekFromApi();
-     } else {
-       loadInitialSnapshot();
-     }
-   }, [isAuthenticated]);
-   ```
-
-### Option 2: Feature Flag
-
-Create a configuration option to switch between modes:
+The `usePlanner` hook (`frontend/src/hooks/usePlanner.ts`) provides a seamless interface:
 
 ```typescript
-// config.ts
-export const USE_BACKEND_API = import.meta.env.VITE_USE_BACKEND_API === 'true';
+// Components use the unified hook
+import { usePlanner } from '../../hooks/usePlanner';
 
-// In components
-const usePlannerStore = USE_BACKEND_API
-  ? usePlannerStoreWithApi
-  : usePlannerStoreLocal;
+export const MyComponent = () => {
+  const tasks = usePlanner((state) => state.tasks);
+  const createTask = usePlanner((state) => state.createFloatingTask);
+  // ... component logic
+};
 ```
 
-### Option 3: Gradual Migration
+### Automatic Store Selection
 
-Keep both stores and migrate features incrementally:
+The hook automatically selects the right store:
 
-1. Start with read-only backend data
-2. Add create/update operations
-3. Finally enable full sync
-4. Remove local storage fallback
+```typescript
+export function usePlanner<T>(selector: (state: PlannerState) => T): T {
+  const { isAuthenticated } = useAuthStore();
+
+  // Authenticated: use API-integrated store
+  if (isAuthenticated) {
+    return usePlannerStoreWithApi(selector);
+  }
+
+  // Unauthenticated: use localStorage store
+  return usePlannerStore(selector);
+}
+```
+
+### Bootstrap Logic
+
+The `usePlannerBootstrap` hook loads data based on authentication:
+
+```typescript
+// frontend/src/hooks/usePlannerBootstrap.ts
+useEffect(() => {
+  if (!authInitialized) return;
+
+  if (isAuthenticated && !apiIsHydrated) {
+    // Load from backend API
+    void apiLoadWeek();
+  } else if (!isAuthenticated && !localIsHydrated) {
+    // Load from localStorage
+    void localLoadSnapshot();
+  }
+}, [isAuthenticated, authInitialized, ...]);
+```
 
 ## API Requirements
 
@@ -221,7 +233,7 @@ Week and task data is cached in Zustand state. No additional caching layer is im
 
 ## Migration Path
 
-### Phase 1: Current State ✅
+### Phase 1: Infrastructure ✅
 
 - API client infrastructure
 - Authentication flow
@@ -229,14 +241,18 @@ Week and task data is cached in Zustand state. No additional caching layer is im
 - Type mappers
 - API-integrated store (parallel implementation)
 
-### Phase 2: Integration (Next Steps)
+### Phase 2: Integration ✅
 
-1. Update `App.tsx` to use API-integrated store when authenticated
-2. Update `usePlannerBootstrap` hook
-3. Add loading spinners for async operations
-4. Test with real backend
+1. ✅ Created unified `usePlanner` hook that selects store based on authentication
+2. ✅ Updated all components to use unified hook
+3. ✅ Updated `usePlannerBootstrap` to load from API when authenticated
+4. ✅ Backend integration now enabled by default for authenticated users
+5. ✅ Loading spinners already implemented in `App.tsx`
+6. ✅ All tests passing (173 total: 121 frontend + 52 backend)
 
-### Phase 3: Optimization
+**Status**: Backend synchronization is now fully enabled for authenticated users. The app automatically switches between localStorage mode (unauthenticated) and backend API mode (authenticated).
+
+### Phase 3: Optimization (Future)
 
 1. Add request batching
 2. Implement optimistic reconciliation

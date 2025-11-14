@@ -539,9 +539,10 @@ NODE_ENV="development"
 - [x] Type mappers for frontend-backend conversion
 - [x] API-integrated planner store with optimistic updates
 - [x] Comprehensive integration documentation
-- [ ] Enable backend mode by default (optional)
-- [ ] Real-time data sync (WebSockets)
-- [ ] Backend deployment
+- [x] **Unified `usePlanner` hook for automatic store selection**
+- [x] **Backend mode enabled by default for authenticated users**
+- [ ] Real-time data sync (WebSockets - future enhancement)
+- [ ] Backend deployment (operations task)
 
 ### Phase 4: Advanced Features (Planned)
 - [ ] Pomodoro timer integration

@@ -2,7 +2,7 @@ import { useId, useState } from "react";
 import type { FormEvent } from "react";
 import { Sparkles, Timer } from "lucide-react";
 
-import { usePlannerStore } from "../../state/usePlannerStore";
+import { usePlanner } from "../../hooks/usePlanner";
 import type { PlannerCategory, PlannerEnergy } from "../../types/planner";
 
 interface ParsedQuickAdd {
@@ -166,7 +166,7 @@ export const QuickAddBar = () => {
   const [hintIndex, setHintIndex] = useState(0);
   const [lastCreatedTitle, setLastCreatedTitle] = useState<string | null>(null);
 
-  const createFloatingTask = usePlannerStore(
+  const createFloatingTask = usePlanner(
     (state) => state.createFloatingTask
   );
 

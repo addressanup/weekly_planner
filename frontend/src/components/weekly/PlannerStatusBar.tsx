@@ -1,19 +1,20 @@
 import { Loader2, Save } from 'lucide-react'
 
-import { usePlannerStore } from '../../state/usePlannerStore'
+import { usePlanner } from '../../hooks/usePlanner'
 import { formatRelativeTime } from '../../lib/time'
 
 const sourceCopy: Record<string, string> = {
   mock: 'Mock dataset',
   'local-storage': 'Local storage',
+  'backend-api': 'Backend API',
 }
 
 export const PlannerStatusBar = () => {
-  const isHydrated = usePlannerStore((state) => state.isHydrated)
-  const isSaving = usePlannerStore((state) => state.isSaving)
-  const snapshotSource = usePlannerStore((state) => state.snapshotSource)
-  const lastSavedAt = usePlannerStore((state) => state.lastSavedAt)
-  const persistSnapshot = usePlannerStore((state) => state.persistSnapshot)
+  const isHydrated = usePlanner((state) => state.isHydrated)
+  const isSaving = usePlanner((state) => state.isSaving)
+  const snapshotSource = usePlanner((state) => state.snapshotSource)
+  const lastSavedAt = usePlanner((state) => state.lastSavedAt)
+  const persistSnapshot = usePlanner((state) => state.persistSnapshot)
 
   const handleSave = () => {
     void persistSnapshot()

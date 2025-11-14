@@ -1,5 +1,5 @@
 import type { PlannerDay, PlannerSwimlaneKey } from '../../types/planner'
-import { usePlannerStore } from '../../state/usePlannerStore'
+import { usePlanner } from '../../hooks/usePlanner'
 import { LaneColumn } from './LaneColumn'
 
 interface DayColumnProps {
@@ -7,8 +7,8 @@ interface DayColumnProps {
 }
 
 export const DayColumn = ({ day }: DayColumnProps) => {
-  const swimlanes = usePlannerStore((state) => state.activeWeek.swimlanes)
-  const tasks = usePlannerStore((state) => state.tasks)
+  const swimlanes = usePlanner((state) => state.activeWeek.swimlanes)
+  const tasks = usePlanner((state) => state.tasks)
 
   const tasksForLane = (laneId: PlannerSwimlaneKey) =>
     tasks
