@@ -34,12 +34,17 @@ export const saveSnapshot = async (snapshot: PlannerSnapshot): Promise<void> => 
 
   await sleep(80)
 
-  const envelope: PlannerSnapshotEnvelope = {
-    version: 1,
-    snapshot,
-  }
+  try {
+    const envelope: PlannerSnapshotEnvelope = {
+      version: 1,
+      snapshot,
+    }
 
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(envelope))
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(envelope))
+  } catch (error) {
+    console.error('Failed to save planner snapshot:', error)
+    throw new Error('Failed to save planner data')
+  }
 }
 
 export const loadOrCreateSnapshot = async (): Promise<PlannerSnapshot> => {
